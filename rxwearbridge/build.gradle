@@ -1,0 +1,67 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'rxwearbridge'
+
+    publishedGroupId = 'com.jaumard'
+    libraryName = 'RxWearBridge'
+    artifact = 'rxwearbridge'
+
+    libraryDescription = 'Small library to support data synchronisation and messages between Android and Android Wear devices with Rx interface'
+
+    siteUrl = 'https://github.com/jaumard/RxWearBridge'
+    gitUrl = 'https://github.com/jaumard/RxWearBridge.git'
+
+    libraryVersion = '1.0.0'
+
+    developerId = 'jaumard'
+    developerName = 'Jimmy Aumard'
+    developerEmail = 'jimmy.aumard@gmail.com'
+
+    licenseName = 'MIT'
+    licenseUrl = 'https://opensource.org/licenses/MIT'
+    allLicenses = ["MIT"]
+}
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "io.reactivex.rxjava2:rxkotlin:$rxkotlin"
+    implementation "io.reactivex.rxjava2:rxandroid:$rxandroid"
+    implementation "io.reactivex.rxjava2:rxjava:$rxjava"
+    implementation "com.google.android.gms:play-services-wearable:$wearable"
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+repositories {
+    mavenCentral()
+}
+
+apply from: 'install.gradle'
+apply from: 'bintray.gradle'
