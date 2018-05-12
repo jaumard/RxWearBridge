@@ -6,11 +6,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import com.google.android.gms.wearable.DataMap
-import com.jaumard.common.Contants
-import com.jaumard.common.Contants.Companion.BITMAP_KEY
-import com.jaumard.common.Contants.Companion.BITMAP_PATH
-import com.jaumard.common.Contants.Companion.DATA_INT_KEY
-import com.jaumard.common.Contants.Companion.DATA_KEY
+import com.jaumard.common.*
 import com.jaumard.rxwearbridge.RxWearBridge
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.subscribeBy
@@ -58,7 +54,7 @@ class MainActivity : AppCompatActivity() {
         dataMap2.putString(DATA_KEY, "myDataArraySync2")
         dataMap2.putInt(DATA_INT_KEY, 5)
         val dataMapArray = arrayListOf(dataMap, dataMap2)
-        rxWearBridge.syncDataArray(Contants.DATA_ARRAY_PATH, dataMapArray)
+        rxWearBridge.syncDataArray(DATA_ARRAY_PATH, dataMapArray)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(onError = {
@@ -72,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         val dataMap = DataMap()
         dataMap.putString(DATA_KEY, "myDataSync")
         dataMap.putInt(DATA_INT_KEY, 9)
-        rxWearBridge.syncData(Contants.DATA_PATH, dataMap)
+        rxWearBridge.syncData(DATA_PATH, dataMap)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(onError = {
@@ -86,7 +82,7 @@ class MainActivity : AppCompatActivity() {
         val dataMap = DataMap()
         dataMap.putString(DATA_KEY, "myDataSyncUpdated")
         dataMap.putInt(DATA_INT_KEY, Math.round(Math.random() * 100).toInt())
-        rxWearBridge.syncData(Contants.DATA_PATH, dataMap)
+        rxWearBridge.syncData(DATA_PATH, dataMap)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(onError = {
@@ -97,7 +93,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun sendMessage(v: View) {
-        rxWearBridge.sendMessage(Contants.MESSAGE_PATH)
+        rxWearBridge.sendMessage(MESSAGE_PATH)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(onError = {

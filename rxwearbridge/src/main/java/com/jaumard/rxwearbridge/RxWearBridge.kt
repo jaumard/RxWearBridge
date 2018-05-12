@@ -31,6 +31,8 @@ class RxWearBridge(private val context: Context,
         private const val TAG = "RxWearBridge"
     }
 
+    private var binded = false
+
     /**
      * Bind capabilities by adding a listener how will notify {@link capabilitySubject} per capability that a device has been detected
      * @param capabilities list of capabilities to bind as String
@@ -55,8 +57,11 @@ class RxWearBridge(private val context: Context,
      * Bind data and messages to notify {@see dataSubject} and {@see messageSubject} when new data or messages append
      */
     fun bind() {
-        Wearable.getDataClient(context).addListener(this)
-        Wearable.getMessageClient(context).addListener(this)
+        if (!binded) {
+            binded = true
+            Wearable.getDataClient(context).addListener(this)
+            Wearable.getMessageClient(context).addListener(this)
+        }
     }
 
     /**
@@ -76,6 +81,7 @@ class RxWearBridge(private val context: Context,
         Wearable.getDataClient(context).removeListener(this)
         Wearable.getCapabilityClient(context).removeListener(this)
         Wearable.getMessageClient(context).removeListener(this)
+        binded = false
     }
 
     /**

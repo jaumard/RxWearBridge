@@ -15,7 +15,7 @@ ext {
     siteUrl = 'https://github.com/jaumard/RxWearBridge'
     gitUrl = 'https://github.com/jaumard/RxWearBridge.git'
 
-    libraryVersion = '1.0.0'
+    libraryVersion = '1.0.1'
 
     developerId = 'jaumard'
     developerName = 'Jimmy Aumard'
@@ -56,8 +56,6 @@ dependencies {
     implementation "io.reactivex.rxjava2:rxjava:$rxjava"
     implementation "com.google.android.gms:play-services-wearable:$wearable"
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
 repositories {
     mavenCentral()

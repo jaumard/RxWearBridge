@@ -4,10 +4,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.support.wearable.activity.WearableActivity
 import android.util.Log
-import com.jaumard.common.Contants
-import com.jaumard.common.Contants.Companion.BITMAP_KEY
-import com.jaumard.common.Contants.Companion.DATA_INT_KEY
-import com.jaumard.common.Contants.Companion.DATA_KEY
+import com.jaumard.common.*
 import com.jaumard.rxwearbridge.RxWearBridge
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.subscribeBy
@@ -34,7 +31,7 @@ class MainActivity : WearableActivity() {
             message.text = "${message.text}\n${it.second.getString(DATA_KEY)} ${it.second.getInt(DATA_INT_KEY)}"
         }
         message.setOnClickListener {
-            rxWearBridge.sendMessage(Contants.MESSAGE_PATH)
+            rxWearBridge.sendMessage(MESSAGE_PATH)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeBy(onError = {
@@ -62,7 +59,7 @@ class MainActivity : WearableActivity() {
     }
 
     private fun getData() {
-        rxWearBridge.getData(Contants.DATA_PATH)
+        rxWearBridge.getData(DATA_PATH)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(onError = {
@@ -74,7 +71,7 @@ class MainActivity : WearableActivity() {
     }
 
     private fun getDataArray() {
-        rxWearBridge.getDataArray(Contants.DATA_ARRAY_PATH)
+        rxWearBridge.getDataArray(DATA_ARRAY_PATH)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(onError = {
@@ -88,7 +85,7 @@ class MainActivity : WearableActivity() {
     }
 
     private fun getBitmap() {
-        rxWearBridge.getBitmap(Contants.BITMAP_PATH, BITMAP_KEY)
+        rxWearBridge.getBitmap(BITMAP_PATH, BITMAP_KEY)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(onError = {
