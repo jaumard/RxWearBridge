@@ -1,11 +1,13 @@
 # RxWearBridge
 
+[![Download](https://api.bintray.com/packages/jaumard/maven/rxwearbridge/images/download.svg)](https://bintray.com/jaumard/maven/rxwearbridge/_latestVersion)
+
 Small library to support data synchronisation and messages between Android and Android Wear devices with Rx interface
 
 It's easy to use, first install the library:
 
 ```groovy
-implementation 'com.jaumard:rxwearbridge:1.0.0'
+implementation 'com.jaumard:rxwearbridge:x.x.x'
 ```
 
 Under your main build gradle you need to add this:
