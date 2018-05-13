@@ -1,0 +1,67 @@
+apply plugin: 'maven'
+
+android.libraryVariants.all { variant ->
+    def artifactPackaging = "aar"
+    def artifactPrefix = "$project.name-$variant.name"
+    def artifactId2 = "${project.name}"
+    def artifactName = "${project.name}-${variant.name.substring(variant.flavorName.length(), variant.name.length()).toLowerCase()}"
+    def artifactsOutput = "$buildDir/outputs"
+
+    def assemblePomTaskName = "assemble${variant.name.capitalize()}Pom"
+    task(assemblePomTaskName) {
+        description "Assemble Pom file for $variant.name."
+        doLast {
+            pom {
+                artifactId = "$artifactId2"
+                project {
+                    description project.description
+                    name project.name.capitalize()
+                    packaging artifactPackaging
+                    dependencies {
+                        configurations.implementation.allDependencies.withType(ModuleDependency).forEach { currentDependency ->
+                            dependency {
+                                groupId currentDependency.group
+                                artifactId currentDependency.name
+                                version currentDependency.version
+                                exclusions {
+                                    currentDependency.excludeRules.forEach { excludeRule ->
+                                        exclusion {
+                                            groupId excludeRule.group
+                                            artifactId excludeRule.module
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        configurations.compileOnly.allDependencies.withType(ModuleDependency).forEach { currentDependency ->
+                            dependency {
+                                groupId currentDependency.group
+                                artifactId currentDependency.name
+                                version currentDependency.version
+                                scope 'provided'
+                                exclusions {
+                                    currentDependency.excludeRules.forEach { excludeRule ->
+                                        exclusion {
+                                            groupId excludeRule.group
+                                            artifactId excludeRule.module
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }.writeTo("$artifactsOutput/" + artifactPrefix + ".pom")
+        }
+    }
+
+    task("assemble${variant.name.capitalize()}Artifacts", dependsOn: [
+        assemblePomTaskName,
+        "assemble${variant.name.capitalize()}"])
+
+    // To adapt for each library (or find a way to have it generic)
+    task("deploy${variant.name.capitalize()}Locally", dependsOn: "assemble${variant.name.capitalize()}Artifacts", type: Exec) {
+        commandLine 'mvn' args 'install:install-file', "-DpomFile=$artifactsOutput/${artifactPrefix}.pom", "-DgroupId=$project.group", "-DartifactId=$artifactId2",
+            "-Dversion=$project.version", "-Dpackaging=$artifactPackaging", "-Dfile=${artifactsOutput}/$artifactPackaging/$artifactName.$artifactPackaging"
+    }
+}

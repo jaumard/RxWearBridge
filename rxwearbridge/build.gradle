@@ -15,7 +15,7 @@ ext {
     siteUrl = 'https://github.com/jaumard/RxWearBridge'
     gitUrl = 'https://github.com/jaumard/RxWearBridge.git'
 
-    libraryVersion = '1.1.0'
+    libraryVersion = '1.1.1'
 
     developerId = 'jaumard'
     developerName = 'Jimmy Aumard'
@@ -33,7 +33,7 @@ android {
         minSdkVersion 16
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName libraryVersion
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -63,3 +63,4 @@ repositories {
 
 apply from: 'install.gradle'
 apply from: 'bintray.gradle'
+apply from: 'deploy.gradle'

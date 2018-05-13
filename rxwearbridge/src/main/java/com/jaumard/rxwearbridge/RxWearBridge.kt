@@ -105,6 +105,7 @@ class RxWearBridge(private val context: Context,
         return getNodes(capability)
                 .flattenAsObservable { it }
                 .flatMapSingle {
+                    Log.d(TAG, "$path with $dataMap and $capability capability")
                     val sendMessageTask = Wearable.getMessageClient(context).sendMessage(it, path, dataMap.toByteArray())
                     sendMessageTask.toSingle()
                 }.ignoreElements()

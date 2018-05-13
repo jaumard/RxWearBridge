@@ -160,9 +160,15 @@ allow you to retrieve a bitmap from connected device
 ## Examples
 This library come with a small example app, feel free to check it to see all the above cases.
 
-## Deployment to bintray
+## Deployment
+### To bintray
 ```
 ./gradlew clean bintrayUpload
+```
+
+### Locally
+```
+./gradlew clean deployDebugLocally
 ```
 
 ## Licence
