@@ -9,10 +9,22 @@ import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.*
 import io.reactivex.Completable
+import io.reactivex.Maybe
 import io.reactivex.Single
 import io.reactivex.subjects.PublishSubject
 import java.io.ByteArrayOutputStream
 import java.security.InvalidParameterException
+
+internal fun <T> Task<T>.toMaybe(): Maybe<T> {
+    return Maybe.defer {
+        val result = Tasks.await(this)
+        if (result == null) {
+            Maybe.empty()
+        } else {
+            Maybe.just(result)
+        }
+    }
+}
 
 internal fun <T> Task<T>.toSingle(): Single<T> {
     return Single.defer { Single.just(Tasks.await(this)) }
@@ -27,7 +39,6 @@ class RxWearBridge(private val context: Context,
     companion object {
         private const val DATA_ARRAY = "data-array"
         private const val DATA_ITEM = "data-item"
-        private const val DATA_ASSET = "data-asset"
         private const val TAG = "RxWearBridge"
     }
 
@@ -164,26 +175,27 @@ class RxWearBridge(private val context: Context,
      */
     fun getDataArray(path: String, locally: Boolean = false): Single<List<DataMap>> {
         return if (locally) {
-            getLocalNodeId().flatMap {
+            getLocalNodeId().flatMapMaybe {
                 val uri = Uri.Builder()
                         .scheme(PutDataRequest.WEAR_URI_SCHEME)
                         .path(path)
                         .authority(it)
                         .build()
-                Log.d(TAG, "getData $uri")
-                Wearable.getDataClient(context).getDataItem(uri).toSingle()
+                Log.d(TAG, "getDataArray $uri")
+                Wearable.getDataClient(context).getDataItem(uri).toMaybe()
             }
         } else {
-            getNodes().flatMap {
+            getNodes().flatMapMaybe {
                 val uri = Uri.Builder()
                         .scheme(PutDataRequest.WEAR_URI_SCHEME)
                         .path(path)
                         .authority(it.last())
                         .build()
-                Log.d(TAG, "getData $uri")
-                Wearable.getDataClient(context).getDataItem(uri).toSingle()
+                Log.d(TAG, "getDataArray $uri")
+                Wearable.getDataClient(context).getDataItem(uri).toMaybe()
             }
-        }.map { DataMap.fromByteArray(it.data).getDataMapArrayList(DATA_ARRAY) }
+        }.map { DataMapItem.fromDataItem(it)?.dataMap?.getDataMapArrayList(DATA_ARRAY) ?: emptyList<DataMap>() }
+                .switchIfEmpty(Single.just(emptyList()))
     }
 
     /**
@@ -193,55 +205,69 @@ class RxWearBridge(private val context: Context,
     fun getAllData(path: String? = null): Single<List<DataMap>> {
         return if (path == null) {
             Log.d(TAG, "getAllData")
-            Wearable.getDataClient(context).dataItems.toSingle()
+            Wearable.getDataClient(context).dataItems.toMaybe()
         } else {
             val uri = Uri.Builder()
                     .scheme(PutDataRequest.WEAR_URI_SCHEME)
                     .path(path)
                     .build()
             Log.d(TAG, "getAllData for $uri")
-            Wearable.getDataClient(context).getDataItems(uri).toSingle()
+            Wearable.getDataClient(context).getDataItems(uri).toMaybe()
         }.map { buffer ->
             buffer.map { DataMapItem.fromDataItem(it).dataMap }
                     .toList()
                     .also {
                         buffer.release()
                     }
-        }
+        }.switchIfEmpty(Single.just(emptyList<DataMap>()))
     }
 
-    private fun getRawDataMap(path: String, locally: Boolean = false): Single<DataMap> {
+    private fun getRawDataMap(path: String, locally: Boolean = false): Maybe<DataMap> {
         return if (locally) {
-            getLocalNodeId().flatMap {
+            getLocalNodeId().flatMapMaybe {
                 val uri = Uri.Builder()
                         .scheme(PutDataRequest.WEAR_URI_SCHEME)
                         .path(path)
                         .authority(it)
                         .build()
                 Log.d(TAG, "getRawDataMap for $uri")
-                Wearable.getDataClient(context).getDataItem(uri).toSingle()
+                Wearable.getDataClient(context).getDataItem(uri).toMaybe()
             }
         } else {
-            getNodes().flatMap {
+            getNodes().flatMapMaybe {
                 val uri = Uri.Builder()
                         .scheme(PutDataRequest.WEAR_URI_SCHEME)
                         .path(path)
                         .authority(it.last())
                         .build()
                 Log.e("TAG", "getRawDataMap for $uri")
-                Wearable.getDataClient(context).getDataItem(uri).toSingle()
+                Wearable.getDataClient(context).getDataItem(uri).toMaybe()
             }
-        }.map { DataMapItem.fromDataItem(it).dataMap }
+        }.flatMap {
+            val data = DataMapItem.fromDataItem(it)?.dataMap
+            if (data == null) {
+                Maybe.empty()
+            } else {
+                Maybe.just(data)
+            }
+        }
     }
 
     /**
      * Get specific data from path
-     * @param path where retrieve the data as Uri
+     * @param path where retrieve the data as String
      * @param locally should the data by retrieve on the current device
      * @return Single of DataMap containing the sync data
      */
-    fun getData(path: String, locally: Boolean = false): Single<DataMap> {
-        return getRawDataMap(path, locally).map { it.getDataMap(DATA_ITEM) }
+    fun getData(path: String, locally: Boolean = false): Maybe<DataMap> {
+        return getRawDataMap(path, locally).flatMap {
+            val dataMap = it.getDataMap(DATA_ITEM)
+            if (dataMap == null) {
+                Maybe.empty<DataMap>()
+            } else {
+                Maybe.just(dataMap)
+            }
+        }
     }
 
     /**
@@ -254,13 +280,13 @@ class RxWearBridge(private val context: Context,
     fun syncBitmap(path: String, assetName: String, bitmap: Bitmap): Single<DataItem> {
         return Single.defer {
             val asset = createAssetFromBitmap(bitmap)
-            if (asset != null) {
+            if (asset == null) {
+                Single.error(InvalidParameterException("syncBitmap(): asset from bitmap is null"))
+            } else {
                 val dataMapRequest = PutDataMapRequest.create("$path/$assetName")
                 dataMapRequest.dataMap.putAsset(assetName, asset)
                 val request = dataMapRequest.asPutDataRequest()
                 Wearable.getDataClient(context).putDataItem(request).toSingle()
-            } else {
-                Single.error(InvalidParameterException("syncBitmap(): asset from bitmap is null"))
             }
         }
     }
@@ -271,11 +297,15 @@ class RxWearBridge(private val context: Context,
      * @param assetName name given to the bitmap to retrieve
      * @return Single of Bitmap
      */
-    fun getBitmap(path: String, assetName: String): Single<Bitmap> {
+    fun getBitmap(path: String, assetName: String): Maybe<Bitmap> {
         return getRawDataMap("$path/$assetName")
                 .flatMap {
                     val asset = it.getAsset(assetName)
-                    loadBitmapFromAsset(asset)
+                    if (asset == null) {
+                        Maybe.empty()
+                    } else {
+                        loadBitmapFromAsset(asset)
+                    }
                 }
     }
 
@@ -292,10 +322,10 @@ class RxWearBridge(private val context: Context,
         return null
     }
 
-    private fun loadBitmapFromAsset(asset: Asset): Single<Bitmap> {
-        return Single.defer {
+    private fun loadBitmapFromAsset(asset: Asset): Maybe<Bitmap> {
+        return Maybe.defer {
             val task = Wearable.getDataClient(context).getFdForAsset(asset)
-            task.toSingle().map {
+            task.toMaybe().map {
                 BitmapFactory.decodeStream(it.inputStream)
             }
         }

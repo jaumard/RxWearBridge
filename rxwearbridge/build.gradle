@@ -15,7 +15,7 @@ ext {
     siteUrl = 'https://github.com/jaumard/RxWearBridge'
     gitUrl = 'https://github.com/jaumard/RxWearBridge.git'
 
-    libraryVersion = '1.0.1'
+    libraryVersion = '1.1.0'
 
     developerId = 'jaumard'
     developerName = 'Jimmy Aumard'

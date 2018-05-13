@@ -3,7 +3,6 @@ package com.jaumard.wearbridge
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.View
 import com.google.android.gms.wearable.DataMap
 import com.jaumard.common.*
@@ -14,10 +13,6 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
-    companion object {
-        private const val TAG = "RxWearBridge"
-    }
-
     private val rxWearBridge = RxWearBridge(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,12 +21,88 @@ class MainActivity : AppCompatActivity() {
 
         rxWearBridge.messageSubject.subscribe {
             message.text = "${message.text}\n${it.path} from ${it.sourceNodeId}"
-            Log.d(TAG, "${it.path} from ${it.sourceNodeId}")
+            debug("${it.path} from ${it.sourceNodeId}")
+        }
+
+        rxWearBridge.dataSubject.subscribe { (path, data) ->
+
         }
 
         syncData()
         syncDataArray()
         syncBitmap()
+        getUnknownData()
+        getUnknownBitmap()
+        getUnknownDataArray()
+        getAllDataUnknown()
+    }
+
+    private fun getUnknownBitmap() {
+        rxWearBridge.getBitmap("/unknown/path", "test")
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeBy(onError = {
+                    error("unknown bitmap", it)
+                }, onSuccess = {
+                    debug(it)
+                    assert(false)//must not return a value
+                })
+    }
+
+    private fun getAllDataUnknown() {
+        rxWearBridge.getAllData("/unknown/path")
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeBy(onError = {
+                    error("unknown all data", it)
+                }, onSuccess = {
+                    debug(it)
+                    assert(it.isEmpty())
+                })
+    }
+
+    private fun getUnknownDataArray() {
+        rxWearBridge.getDataArray("/unknown/path", true)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeBy(onError = {
+                    error("unknown data array local", it)
+                }, onSuccess = {
+                    debug(it)
+                    assert(it.isEmpty())
+                })
+
+        rxWearBridge.getDataArray("/unknown/path")
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeBy(onError = {
+                    error("unknown data array", it)
+                }, onSuccess = {
+                    debug(it)
+                    assert(it.isEmpty())
+                })
+    }
+
+    private fun getUnknownData() {
+        rxWearBridge.getData("/unknown/path", true)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeBy(onError = {
+                    error("unknown data local", it)
+                }, onSuccess = {
+                    debug(it)
+                    assert(false)//must not return a value
+                })
+
+        rxWearBridge.getData("/unknown/path")
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeBy(onError = {
+                    error("unknown data", it)
+                }, onSuccess = {
+                    debug(it)
+                    assert(false)//must not return a value
+                })
     }
 
     private fun syncBitmap() {
@@ -40,9 +111,9 @@ class MainActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(onError = {
-                    Log.e(TAG, "syncBitmap", it)
+                    error("syncBitmap", it)
                 }, onSuccess = {
-                    Log.i(TAG, "syncBitmap ok $it")
+                    debug("syncBitmap ok $it")
                 })
     }
 
@@ -58,9 +129,9 @@ class MainActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(onError = {
-                    Log.e(TAG, "syncDataArray", it)
+                    error("syncDataArray", it)
                 }, onSuccess = {
-                    Log.i(TAG, "syncDataArray ok $it")
+                    debug("syncDataArray ok $it")
                 })
     }
 
@@ -72,9 +143,9 @@ class MainActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(onError = {
-                    Log.e(TAG, "syncData", it)
+                    error("syncData", it)
                 }, onSuccess = {
-                    Log.i(TAG, "syncData ok $it")
+                    debug("syncData ok $it")
                 })
     }
 
@@ -86,9 +157,9 @@ class MainActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(onError = {
-                    Log.e(TAG, "updateData", it)
+                    error("updateData", it)
                 }, onSuccess = {
-                    Log.i(TAG, "updateData ok $it")
+                    debug("updateData ok $it")
                 })
     }
 
@@ -97,9 +168,9 @@ class MainActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeBy(onError = {
-                    Log.e(TAG, "sendMessage", it)
+                    error("sendMessage", it)
                 }, onComplete = {
-                    Log.i(TAG, "sendMessage ok")
+                    debug("sendMessage ok")
                 })
     }
 
